@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1e293b">
+  <meta name="description" content="Buy, sell, and connect within the QCU community.">
+  <title>Digital MarketHub | QCU Community Marketplace</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="announcement"><span class="verified-dot"></span> A marketplace made for the QCU community</div>
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="Digital MarketHub home">
+      <img class="brand-mark" src="img/logo.png" alt="">
+      <span>Digital <strong>MarketHub</strong><small>QCU COMMUNITY MARKETPLACE</small></span>
+    </a>
+    <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="#home" data-nav="home">Home</a>
+      <a href="#browse" data-nav="browse">Browse</a>
+      <a href="#sell" data-nav="sell">Sell an item</a>
+    </nav>
+    <div class="header-actions">
+      <a class="header-icon" href="#messages" aria-label="Messages">Messages <span class="unread-dot"></span></a>
+      <button class="header-icon notification-button" type="button" aria-label="Notifications">Notifications</button>
+      <a class="avatar-link" href="#profile" aria-label="Open profile"><span class="avatar">AF</span><span class="avatar-name">Adrian F.</span></a>
+      <a class="admin-link" href="#admin">Admin demo ↗</a>
+    </div>
+  </header>
+
+  <main id="app" tabindex="-1"></main>
+
+  <footer class="site-footer">
+    <div class="footer-main">
+      <div class="footer-brand">
+        <a class="brand brand-light" href="#home"><img class="brand-mark" src="img/logo.png" alt=""><span>Digital <strong>MarketHub</strong><small>QCU COMMUNITY MARKETPLACE</small></span></a>
+        <p>Buy. Sell. Connect within QCU.</p>
+        <p class="footer-note">A student-developed marketplace concept for the QCU community.</p>
+      </div>
+      <div class="footer-links">
+        <div><h3>Marketplace</h3><a href="#browse">Browse listings</a><a href="#sell">Sell an item</a><a href="#messages">Messages</a></div>
+        <div><h3>Community</h3><a href="#safety">Stay safe</a><a href="#safety">Community rules</a><a href="#safety">Privacy</a></div>
+        <div><h3>About</h3><a href="#home">About MarketHub</a><a href="mailto:hello@digitalmarkethub.example">Contact the team</a><span>QCU · SBIT-2A</span></div>
+      </div>
+    </div>
+    <div class="footer-bottom"><span>© 2026 Digital MarketHub · Student project prototype</span><span>Orange, navy &amp; white. Built for QCU.</span></div>
+  </footer>
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+</body>
+</html>
