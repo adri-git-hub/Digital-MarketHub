@@ -1723,7 +1723,7 @@ td .button-danger {
 .status-pill, .badge, .mini-verified, .rule-list, .stat-card span, .financial-grid span,
 .admin-panel-head p, .disclaimer, td, th, .footer-links a, .footer-links span, .footer-note,
 .footer-bottom, .message, .message time, .community-stat span, .community-card .subtle {
-  font-size: 12px !important;
+  font-size: 13px !important;
 }
 .field label, .filter-group label, .field input, .field select, .field textarea, .filter-group select,
 .filter-group input, .search-form input, .chat-compose input, .button-secondary, .button-danger,
@@ -1888,5 +1888,176 @@ textarea:focus-visible {
   }
   .my-listing {
     flex-wrap: wrap;
+  }
+}
+
+/* ---- Typography, spacing and overlap fixes ---- */
+body {
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 {
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+p {
+  line-height: 1.65;
+}
+.demo-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 16px;
+  padding: 7px 14px;
+  background: #fff7ed;
+  border-bottom: 1px solid #fde4cf;
+  color: #8c5a36;
+  font-size: 13px;
+}
+.demo-bar > span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.demo-bar select {
+  padding: 5px 8px;
+  border: 1px solid #f4c9a5;
+  border-radius: 6px;
+  background: white;
+  color: var(--navy);
+  font-size: 13px;
+}
+.demo-bar .reset-demo {
+  color: #8c5a36;
+  font-size: 12px;
+}
+.site-header {
+  height: auto;
+  min-height: 72px;
+  flex-wrap: wrap;
+  row-gap: 6px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.main-nav {
+  height: auto;
+  align-self: stretch;
+}
+.main-nav a {
+  padding: 14px 2px;
+  font-size: 14px;
+}
+.header-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px 16px;
+}
+.verify-link {
+  font-size: 13px;
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  margin-bottom: 14px;
+  border: 1px solid #f4c9a5;
+  border-radius: 999px;
+  background: #fff7f0;
+  font-size: 13px;
+}
+.back-link:hover {
+  background: #ffe9d6;
+  text-decoration: none;
+}
+.page-top h1 {
+  font-size: 30px;
+}
+.page-top p,
+.section-heading p {
+  font-size: 14px;
+}
+.product-body h3 {
+  font-size: 14px;
+}
+.product-price {
+  font-size: 17px;
+}
+.product-meta,
+.seller-line,
+.seller-stats,
+.button-row,
+.form-actions,
+.section-heading,
+.admin-panel-head,
+.risk-card h3 {
+  flex-wrap: wrap;
+}
+.product-meta,
+.seller-stats {
+  gap: 6px 12px;
+}
+.product-body,
+.my-listing > div {
+  min-width: 0;
+}
+.product-body h3,
+.product-body h3 a,
+.seller-card-top strong,
+.detail-info h1,
+.message {
+  overflow-wrap: anywhere;
+}
+.badge,
+.status-pill,
+.mini-verified,
+.text-link {
+  white-space: nowrap;
+}
+.button-primary,
+.button-secondary,
+.button-danger {
+  min-height: 40px;
+}
+@media (max-width: 700px) {
+  .site-header {
+    padding: 8px 14px;
+    gap: 8px;
+    justify-content: space-between;
+  }
+  .brand {
+    min-width: 0;
+  }
+  .brand small {
+    display: none;
+  }
+  .main-nav {
+    top: 100%;
+  }
+  .header-actions {
+    order: 4;
+    width: 100%;
+    margin: 0;
+    justify-content: space-between;
+  }
+  .avatar-link {
+    display: inline-flex !important;
+  }
+  .avatar-name {
+    display: none;
+  }
+  .demo-bar {
+    font-size: 12px;
+  }
+  .page-top h1 {
+    font-size: 25px;
+  }
+  .button-primary,
+  .button-secondary,
+  .button-danger {
+    min-height: 44px;
   }
 }
