@@ -1718,60 +1718,17 @@ td .button-danger {
 }
 
 /* ---- Readability, sample-data tag, consent, sponsored banner ---- */
-.form-note,
-.risk-card p,
-.risk-card li,
-.chat-safety,
-.review-item small,
-.conversation small,
-.seller-stats,
-.detail-attrs span,
-.product-meta,
-.seller-line a,
-.category-tile small,
-.hero-proof,
-.status-pill,
-.badge,
-.mini-verified,
-.rule-list,
-.stat-card span,
-.financial-grid span,
-.admin-panel-head p,
-.disclaimer,
-td,
-th,
-.footer-links a,
-.footer-links span,
-.footer-note,
-.footer-bottom,
-.message,
-.message time,
-.community-stat span,
-.community-card .subtle {
+.form-note, .risk-card p, .risk-card li, .chat-safety, .review-item small, .conversation small,
+.seller-stats, .detail-attrs span, .product-meta, .seller-line a, .category-tile small, .hero-proof,
+.status-pill, .badge, .mini-verified, .rule-list, .stat-card span, .financial-grid span,
+.admin-panel-head p, .disclaimer, td, th, .footer-links a, .footer-links span, .footer-note,
+.footer-bottom, .message, .message time, .community-stat span, .community-card .subtle {
   font-size: 12px !important;
 }
-.field label,
-.filter-group label,
-.field input,
-.field select,
-.field textarea,
-.filter-group select,
-.filter-group input,
-.search-form input,
-.chat-compose input,
-.button-secondary,
-.button-danger,
-.page-top p,
-.section-heading p,
-.browse-toolbar,
-.panel p,
-.modal > p,
-.toast,
-.safety-list,
-.safety-grid ul,
-.product-body h3,
-.detail-description,
-.seller-card-top strong {
+.field label, .filter-group label, .field input, .field select, .field textarea, .filter-group select,
+.filter-group input, .search-form input, .chat-compose input, .button-secondary, .button-danger,
+.page-top p, .section-heading p, .browse-toolbar, .panel p, .modal > p, .toast, .safety-list,
+.safety-grid ul, .product-body h3, .detail-description, .seller-card-top strong {
   font-size: 13px;
 }
 .sample-tag {
@@ -1813,4 +1770,44 @@ th,
   color: white;
   font-size: 10px;
   font-weight: 700;
+}
+
+/* ---- Demo account switcher ---- */
+.account-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #cbd5e1;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.account-switch select {
+  padding: 5px 6px;
+  border: 1px solid #ffffff40;
+  border-radius: 5px;
+  background: #334155;
+  color: white;
+  font-size: 12px;
+}
+.reset-demo {
+  border: 0;
+  background: none;
+  color: #94a3b8;
+  font-size: 11px;
+  text-decoration: underline;
+}
+.reset-demo:hover {
+  color: #ffb47e;
+}
+@media (max-width: 700px) {
+  .account-switch {
+    font-size: 0;
+  }
+  .account-switch select {
+    max-width: 118px;
+    font-size: 11px;
+  }
+  .reset-demo {
+    display: none;
+  }
 }
