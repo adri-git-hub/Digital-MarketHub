@@ -441,7 +441,8 @@ let verificationStatus = "verified";
 let account = "user"; // "guest" (unverified) | "user" (verified) | "admin"
 let messagesReturn = null; // listing the user contacted a seller from
 let lastHash = "";
-let prevHash = "";
+const navStack = [];
+let goingBack = false;
 const STORE_KEY = "markethub-demo-v1";
 const reviewedSellers = new Set();
 let browseFilters = {
@@ -544,13 +545,23 @@ function backTarget() {
     const l = getListing(messagesReturn);
     return { href: `#listing/${l.id}`, label: `Back to “${l.name}”` };
   }
-  const to = prevHash && prevHash !== location.hash ? prevHash : "#home";
-  const text = to.startsWith("#listing/") ? "Back to listing" : to.startsWith("#browse") ? "Back to browse" : to.startsWith("#seller") || to === "#profile" ? "Back to seller profile" : to === "#home" ? "Back to home" : "Back";
+  const prev = navStack[navStack.length - 1];
+  const here = location.hash || "#home";
+  const to = prev && prev !== here ? prev : "#home";
+  const text = to.startsWith("#listing/") ? "Back to listing" : to.startsWith("#browse") ? "Back to browse" : to.startsWith("#seller") || to === "#profile" ? "Back to seller profile" : to === "#mylistings" ? "Back to my listings" : to === "#home" ? "Back to home" : "Back";
   return { href: to, label: text };
+}
+function goBack(href) {
+  if (navStack[navStack.length - 1] === href) navStack.pop();
+  goingBack = true;
+  if ((location.hash || "#home") === href) {
+    goingBack = false;
+    routeFromHash();
+  } else location.hash = href;
 }
 function backLinkHtml() {
   const b = backTarget();
-  return `<a class="back-link" href="${esc(b.href)}">← ${esc(b.label)}</a>`;
+  return `<a class="back-link" data-action="go-back" href="${esc(b.href)}">← ${esc(b.label)}</a>`;
 }
 function pageTop(title, description, label = "MARKETPLACE") {
   const back = currentRoute === "home" ? "" : backLinkHtml();
@@ -1151,23 +1162,30 @@ function loadState() {
 }
 function renderHeader() {
   const el = document.getElementById("header-actions");
-  if (!el) return;
+  const bar = document.getElementById("demo-bar");
+  if (!el || !bar) return;
   const labels = { user: "Verified user (Adrian F.)", guest: "Unverified guest", admin: "Admin (staff)" };
-  el.innerHTML = `<label class="account-switch">Demo account <select id="account-switch" aria-label="Switch demo account">${["user", "guest", "admin"]
+  bar.innerHTML = `<span>Demo mode</span><label>Viewing as <select id="account-switch" aria-label="Switch demo account">${["user", "guest", "admin"]
     .map((k) => `<option value="${k}" ${account === k ? "selected" : ""}>${labels[k]}</option>`)
-    .join("")}</select></label>${
-    account === "guest" ? '<a class="verify-link" href="#verify">Register / Verify</a>' : ""
-  }${
-    account === "user" ? '<a class="verify-link" href="#mylistings">My listings</a><a class="avatar-link" href="#profile" aria-label="Open profile"><span class="avatar">AF</span><span class="avatar-name">Adrian F.</span></a>' : ""
-  }${
-    account === "admin" ? '<a class="admin-link" href="#admin">Admin dashboard ↗</a>' : ""
-  }<button class="reset-demo" type="button" data-action="reset-demo">Reset demo</button>`;
+    .join("")}</select></label><button class="reset-demo" type="button" data-action="reset-demo">Reset demo data</button>`;
+  el.innerHTML =
+    account === "guest"
+      ? '<a class="verify-link" href="#verify">Register / Verify</a>'
+      : account === "admin"
+      ? '<a class="verify-link" href="#admin">Admin dashboard</a>'
+      : '<a class="verify-link" href="#mylistings">My listings</a><a class="avatar-link" href="#profile" aria-label="Open my profile"><span class="avatar">AF</span><span class="avatar-name">Adrian F.</span></a>';
 }
 function routeFromHash() {
   renderHeader();
-  if (location.hash !== lastHash) {
-    prevHash = lastHash;
-    lastHash = location.hash;
+  const here = location.hash || "#home";
+  if (here !== lastHash) {
+    if (goingBack) goingBack = false;
+    else if (navStack[navStack.length - 1] === here) navStack.pop();
+    else if (lastHash) {
+      navStack.push(lastHash);
+      if (navStack.length > 30) navStack.shift();
+    }
+    lastHash = here;
   }
   const raw = location.hash.replace(/^#/, "") || "home";
   const [path, query] = raw.split("?");
@@ -1405,6 +1423,11 @@ document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-action]");
   if (!button) return;
   const action = button.dataset.action;
+  if (action === "go-back") {
+    event.preventDefault();
+    goBack(button.getAttribute("href"));
+    return;
+  }
   if (action === "feature") featureModal();
   if (action === "report" && requireVerified()) reportModal(button.dataset.id);
   if (action === "close-modal") closeModal();
