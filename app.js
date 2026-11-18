@@ -714,6 +714,10 @@ function renderBrowse() {
 function renderDetail(id) {
   const item = getListing(id);
   currentListingId = item.id;
+  if (item.status === "Removed") {
+    app.innerHTML = `${pageTop("Listing unavailable", "This listing was removed from the marketplace.", "BROWSE")}<div class="container form-wrap"><div class="empty-state"><strong>This listing is no longer available</strong><a class="text-link" href="#browse">Browse other listings →</a></div></div>`;
+    return;
+  }
   const flags = item.flags || [
     "Price appears reasonable",
     "Seller is verified",
@@ -980,7 +984,7 @@ function adminContent() {
   if (adminTab === "reports" || adminTab === "overview")
     return `${
       adminTab === "overview"
-        ? `<div class="stat-grid"><div class="stat-card"><strong>150</strong><span>Total users</span></div><div class="stat-card"><strong>32</strong><span>Active sellers</span></div><div class="stat-card"><strong>214</strong><span>Active listings</span></div><div class="stat-card"><strong>6</strong><span>Pending reports</span></div><div class="stat-card"><strong>91%</strong><span>Reports reviewed</span></div></div>`
+        ? `<div class="stat-grid"><div class="stat-card"><strong>150</strong><span>Total users</span></div><div class="stat-card"><strong>32</strong><span>Active sellers</span></div><div class="stat-card"><strong>214</strong><span>Active listings</span></div><div class="stat-card"><strong>${reportRows.filter((r) => r.status === "Pending").length}</strong><span>Pending reports</span></div><div class="stat-card"><strong>91%</strong><span>Reports reviewed</span></div></div>`
         : ""
     }
     <section class="admin-panel"><div class="admin-panel-head"><div><h2>Reported listings</h2><p>Reports are reviewed by an administrator. A report does not automatically mean a listing is at fault.</p></div></div>${reportTable()}</section>
@@ -1042,7 +1046,7 @@ function reportTable() {
     .join("")}</tbody></table></div>`;
 }
 function flagTable() {
-  const flags = listings.filter((item) => item.risk === "High" || sellerProfiles[item.seller]?.suspicious);
+  const flags = listings.filter((item) => item.status !== "Removed" && (item.risk === "High" || sellerProfiles[item.seller]?.suspicious));
   return `<div class="table-wrap"><table><thead><tr><th>Listing</th><th>Triggered rules</th><th>Risk level</th><th>Seller</th><th>Review status</th><th>Action</th></tr></thead><tbody>${flags
     .map(
       (item) =>
@@ -1062,6 +1066,7 @@ function flagTable() {
 }
 function listingManagementTable() {
   return `<div class="table-wrap"><table><thead><tr><th>Listing</th><th>Category</th><th>Seller</th><th>Price</th><th>Risk</th><th>Status</th><th>Action</th></tr></thead><tbody id="admin-listing-rows">${listings
+    .filter((item) => item.status !== "Removed")
     .map(
       (item) =>
         `<tr data-search="${esc(
@@ -1141,7 +1146,9 @@ function appealModal(id) {
     "modal-fields"
   ).innerHTML = `<div class="field"><label for="appeal-reason">Why should this be reviewed again? *</label><textarea id="appeal-reason" required maxlength="500" placeholder="Explain what the warning got wrong."></textarea></div>`;
 }
+let resetting = false;
 function saveState() {
+  if (resetting) return;
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify({ listings, reportRows, sellerProfiles, conversations, reviewed: [...reviewedSellers], account, verificationStatus }));
   } catch (e) {}
@@ -1238,6 +1245,9 @@ function openModal(title, body, onSubmit, submitText = "Submit") {
       if (event.target.classList.contains("modal-backdrop")) closeModal();
     });
   modalRoot.querySelector("input, select, textarea, button")?.focus();
+}
+function dropReports(id) {
+  for (let i = reportRows.length - 1; i >= 0; i--) if (reportRows[i].id === id) reportRows.splice(i, 1);
 }
 function confirmModal(title, body, onYes, yes = "Confirm") {
   openModal(title, body, (form) => {
@@ -1441,6 +1451,7 @@ document.addEventListener("click", (event) => {
     const item = getListing(button.dataset.id);
     confirmModal("Delete listing", `Delete “${esc(item.name)}”? This cannot be undone.`, () => {
       item.status = "Removed";
+      dropReports(item.id);
       renderMyListings();
       toast("Listing deleted.");
     }, "Delete");
@@ -1454,6 +1465,7 @@ document.addEventListener("click", (event) => {
     }
   }
   if (action === "reset-demo") {
+    resetting = true;
     try { localStorage.removeItem(STORE_KEY); } catch (e) {}
     location.hash = "#home";
     location.reload();
@@ -1525,9 +1537,9 @@ document.addEventListener("click", (event) => {
     const row = reportRows.find(
       (report) => report.id === Number(button.dataset.id)
     );
-    if (row) row.status = "Resolved";
+    if (row) reportRows.splice(reportRows.indexOf(row), 1);
     renderAdmin();
-    toast("Report marked as resolved.");
+    toast("Report dismissed and removed from the list.");
   }
   if (action === "admin-review-listing") {
     const id = Number(button.dataset.id);
@@ -1561,6 +1573,7 @@ document.addEventListener("click", (event) => {
     const item = getListing(button.dataset.id);
     confirmModal("Remove listing", `Remove “${esc(item.name)}” from the marketplace? The seller will no longer see it in Browse.`, () => {
       item.status = "Removed";
+      dropReports(item.id);
       renderAdmin();
       toast(`“${item.name}” was removed.`);
     }, "Remove");
