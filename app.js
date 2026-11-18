@@ -508,7 +508,7 @@ function productCard(item) {
   return `<article class="product-card">
     <a href="#listing/${item.id}" aria-label="View ${esc(item.name)}">
       <div class="product-image ${slugCategory(item.category)}">${
-    item.featured ? '<span class="badge featured-badge">FEATURED</span>' : ""
+    (item.featured ? '<span class="badge featured-badge">FEATURED</span>' : "") + (item.status === "Sold" ? '<span class="badge sold-badge">SOLD</span>' : "")
   }
         <span class="product-emoji" aria-hidden="true">${item.emoji}</span>
       </div>
@@ -557,8 +557,8 @@ function pageTop(title, description, label = "MARKETPLACE") {
   return `<div class="page-top"><div class="container">${back}<span class="eyebrow">${label}</span><h1>${title}</h1><p>${description}</p></div></div>`;
 }
 function renderHome() {
-  const featured = listings.filter((item) => item.featured && item.status !== "Removed").slice(0, 4);
-  const newest = listings.filter((item) => item.id !== 11 && item.status !== "Removed").slice(0, 4);
+  const featured = listings.filter((item) => item.featured && !["Removed", "Sold"].includes(item.status)).slice(0, 4);
+  const newest = listings.filter((item) => item.id !== 11 && !["Removed", "Sold"].includes(item.status)).slice(0, 4);
   app.innerHTML = `<section class="hero"><div class="hero-inner">
     <div><span class="eyebrow">YOUR QCU COMMUNITY MARKETPLACE</span><h1>Buy and sell within the QCU community.</h1>
       <p class="hero-copy">Find affordable products from verified members of the QCU community. One simple place for campus finds, secondhand essentials, and homemade treats.</p>
@@ -600,6 +600,7 @@ function renderHome() {
     )}
       <div class="product-grid">${newest.map(productCard).join("")}</div>
     </section>
+    <section class="section"><div class="section-heading"><div><h2>How it works</h2><p>Three simple steps to buy and sell safely.</p></div></div><div class="steps-grid"><div class="panel"><strong>1. Verify</strong><p>Register with your QCU email or school ID so everyone knows you are part of the community.</p></div><div class="panel"><strong>2. Post or browse</strong><p>List an item for free, or search by category and price.</p></div><div class="panel"><strong>3. Meet safely</strong><p>Check the risk indicators and reviews, then meet at a public spot on campus.</p></div></div></section>
     <div class="ad-banner"><span>SPONSORED</span> QCU-recognized organization: IT Student Organization recruitment is open. <small>(sample ad, ₱200/month)</small></div>
     <div class="split-sections">
       <section class="panel"><h2>Stay safe on Digital MarketHub</h2><p>A few simple checks can help you make informed decisions when buying or selling.</p><ul class="safety-list"><li>Check seller profiles and reviews</li><li>Be cautious with advance payments</li><li>Meet in appropriate public areas</li><li>Never share passwords or codes</li><li>Report suspicious listings</li><li>Check item details before agreeing</li></ul><a class="text-link" href="#safety">Read safety tips →</a></section>
@@ -612,7 +613,7 @@ function filteredListings() {
     const text =
       `${item.name} ${item.category} ${item.seller} ${item.description}`.toLowerCase();
     return (
-      item.status !== "Removed" &&
+      !["Removed", "Sold"].includes(item.status) &&
       (!browseFilters.search ||
         text.includes(browseFilters.search.toLowerCase())) &&
       (!browseFilters.category || item.category === browseFilters.category) &&
@@ -736,7 +737,7 @@ function renderDetail(id) {
     item.created
   )}</strong></span><span>Category<strong>${esc(
     item.category
-  )}</strong></span><span>Listing ID<strong>DMH-${String(item.id).padStart(
+  )}</strong></span><span>Meet-up spot<strong>${esc(item.pickup || "To be agreed with the seller")}</strong></span><span>Listing ID<strong>DMH-${String(item.id).padStart(
     4,
     "0"
   )}</strong></span></div>
@@ -758,7 +759,7 @@ function renderDetail(id) {
             item.seller
           )}">Contact Seller</button><button class="button-danger" type="button" data-action="report" data-id="${
     item.id
-  }">Report</button></div>
+  }">Report</button><button class="button-secondary" type="button" data-action="share">Share</button></div>
         </div>
         <div class="risk-card ${
           item.risk === "High" ? "high" : ""
@@ -784,7 +785,7 @@ function renderSeller(name) {
   const seller = decodeURIComponent(name || "Adrian F.");
   currentSellerName = seller;
   const profile = sellerProfiles[seller] || sellerProfiles["Adrian F."];
-  const sellerListings = listings.filter((item) => item.seller === seller);
+  const sellerListings = listings.filter((item) => item.seller === seller && !["Removed", "Sold"].includes(item.status));
   app.innerHTML = `${pageTop(
     "Seller profile",
     "Get to know the QCU community member behind the listings.",
@@ -850,6 +851,7 @@ function renderSell() {
         ]
           .map((c) => `<option>${c}</option>`)
           .join("")}</select></div>
+        <div class="field full"><label for="product-pickup">Preferred meet-up spot *</label><select id="product-pickup" name="pickup" required><option value="">Choose a safe public spot</option><option>QCU main gate (near the guard post)</option><option>QCU Library lobby</option><option>QCU canteen</option><option>Other public area on campus</option></select></div>
         <div class="field full"><label for="product-description">Description *</label><textarea id="product-description" name="description" required maxlength="600" placeholder="Describe the condition, what is included, and any details buyers should know."></textarea></div>
         <div class="field full"><label for="product-photo">Upload photos</label><div class="photo-drop"><span aria-hidden="true">📷</span><span><strong>Choose a product photo</strong><br>Photo preview is available in this demo.</span><input id="product-photo" type="file" accept="image/*" aria-label="Choose product photo"></div><p id="photo-status" class="form-note"></p></div>
       </div>
@@ -1071,6 +1073,15 @@ function listingManagementTable() {
     )
     .join("")}</tbody></table></div>`;
 }
+function renderMyListings() {
+  if (!requireVerified()) return;
+  const mine = listings.filter((l) => l.seller === "Adrian F." && l.status !== "Removed");
+  app.innerHTML = `${pageTop("My listings", "Manage the items you posted. Mark an item as sold after the meet-up.", "YOUR ACCOUNT")}<div class="container form-wrap" style="max-width:900px">${
+    mine.length
+      ? mine.map((l) => `<div class="my-listing"><span class="product-emoji" aria-hidden="true">${l.emoji}</span><div><strong><a href="#listing/${l.id}">${esc(l.name)}</a></strong><small>${money(l.price)} · ${esc(l.status || "Active")}</small></div><div class="button-row">${l.status === "Sold" ? "" : `<button class="button-secondary" type="button" data-action="mark-sold" data-id="${l.id}">Mark as sold</button>`}<button class="button-danger" type="button" data-action="delete-listing" data-id="${l.id}">Delete</button></div></div>`).join("")
+      : '<div class="empty-state"><strong>You have no listings yet</strong>Post your first item from Sell an item.</div>'
+  }</div>`;
+}
 function renderProfile() {
   renderSeller(encodeURIComponent("Adrian F."));
 }
@@ -1147,7 +1158,7 @@ function renderHeader() {
     .join("")}</select></label>${
     account === "guest" ? '<a class="verify-link" href="#verify">Register / Verify</a>' : ""
   }${
-    account === "user" ? '<a class="avatar-link" href="#profile" aria-label="Open profile"><span class="avatar">AF</span><span class="avatar-name">Adrian F.</span></a>' : ""
+    account === "user" ? '<a class="verify-link" href="#mylistings">My listings</a><a class="avatar-link" href="#profile" aria-label="Open profile"><span class="avatar">AF</span><span class="avatar-name">Adrian F.</span></a>' : ""
   }${
     account === "admin" ? '<a class="admin-link" href="#admin">Admin dashboard ↗</a>' : ""
   }<button class="reset-demo" type="button" data-action="reset-demo">Reset demo</button>`;
@@ -1195,6 +1206,7 @@ function routeFromHash() {
   else if (currentRoute === "safety") renderSafety();
   else if (currentRoute === "verify") renderVerify();
   else if (currentRoute === "profile") renderProfile();
+  else if (currentRoute === "mylistings") renderMyListings();
   else renderHome();
   window.scrollTo(0, 0);
 }
@@ -1208,6 +1220,15 @@ function openModal(title, body, onSubmit, submitText = "Submit") {
       if (event.target.classList.contains("modal-backdrop")) closeModal();
     });
   modalRoot.querySelector("input, select, textarea, button")?.focus();
+}
+function confirmModal(title, body, onYes, yes = "Confirm") {
+  openModal(title, body, (form) => {
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      closeModal();
+      onYes();
+    });
+  }, yes);
 }
 function closeModal() {
   modalRoot.innerHTML = "";
@@ -1367,6 +1388,7 @@ function postListing(form) {
         "Accessories / Others": "🎒",
       }[data.get("category")] || "📦",
     created: "Just now",
+    pickup: data.get("pickup"),
     featured: false,
     verified: true,
     risk: check.risk,
@@ -1387,6 +1409,27 @@ document.addEventListener("click", (event) => {
   if (action === "report" && requireVerified()) reportModal(button.dataset.id);
   if (action === "close-modal") closeModal();
   if (action === "appeal") appealModal(button.dataset.id);
+  if (action === "mark-sold") {
+    getListing(button.dataset.id).status = "Sold";
+    renderMyListings();
+    toast("Marked as sold.");
+  }
+  if (action === "delete-listing") {
+    const item = getListing(button.dataset.id);
+    confirmModal("Delete listing", `Delete “${esc(item.name)}”? This cannot be undone.`, () => {
+      item.status = "Removed";
+      renderMyListings();
+      toast("Listing deleted.");
+    }, "Delete");
+  }
+  if (action === "share") {
+    try {
+      navigator.clipboard.writeText(location.href);
+      toast("Link copied. Share it in your group chat.");
+    } catch (e) {
+      toast("Copy the link from your browser address bar.");
+    }
+  }
   if (action === "reset-demo") {
     try { localStorage.removeItem(STORE_KEY); } catch (e) {}
     location.hash = "#home";
@@ -1493,9 +1536,11 @@ document.addEventListener("click", (event) => {
   }
   if (action === "admin-remove") {
     const item = getListing(button.dataset.id);
-    item.status = "Removed";
-    renderAdmin();
-    toast(`“${item.name}” marked as removed in the demo.`);
+    confirmModal("Remove listing", `Remove “${esc(item.name)}” from the marketplace? The seller will no longer see it in Browse.`, () => {
+      item.status = "Removed";
+      renderAdmin();
+      toast(`“${item.name}” was removed.`);
+    }, "Remove");
   }
   if (action === "review") {
     if (!requireVerified()) return;
