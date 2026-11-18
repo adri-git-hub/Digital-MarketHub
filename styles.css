@@ -1811,3 +1811,31 @@ td .button-danger {
     display: none;
   }
 }
+
+/* ---- Back links, breadcrumbs, keyboard focus ---- */
+.back-link {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: var(--orange-dark);
+  font-size: 13px;
+  font-weight: 700;
+}
+.back-link:hover {
+  text-decoration: underline;
+}
+.breadcrumb {
+  padding-top: 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.breadcrumb a {
+  color: var(--orange-dark);
+}
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
