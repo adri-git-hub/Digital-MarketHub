@@ -437,7 +437,9 @@ let currentListingId = 1;
 let currentConversation = "Mark D.";
 let adminTab = "overview";
 let currentSellerName = "Adrian F.";
-let verificationStatus = "none";
+let verificationStatus = "verified";
+let account = "user"; // "guest" (unverified) | "user" (verified) | "admin"
+const STORE_KEY = "markethub-demo-v1";
 const reviewedSellers = new Set();
 let browseFilters = {
   search: "",
@@ -483,7 +485,7 @@ function riskCheck(d) {
   return { risk: flags.length ? "High" : "Low", flags, banned: BANNED_WORDS.find((w) => text.includes(w)) };
 }
 function requireVerified() {
-  if (verificationStatus === "verified") return true;
+  if (account !== "guest") return true;
   toast("Please register and verify your QCU membership first.");
   location.hash = "#verify";
   return false;
@@ -918,6 +920,10 @@ function renderSafety() {
     </div><section class="panel" style="margin-top:15px"><h2>Privacy, simply put</h2><p>Digital MarketHub is a student project concept for the QCU community. A production version should collect only what's needed to operate the marketplace, hash passwords securely, restrict administrative access, and delete verification information when it is no longer needed. This prototype uses sample data only and does not collect or store personal information.</p></section></div>`;
 }
 function renderAdmin() {
+  if (account !== "admin") {
+    app.innerHTML = `${pageTop("Admin area", "This page is for staff and administrators only.", "STAFF AREA · DEMO")}<div class="container form-wrap"><div class="form-card"><p class="form-note" style="font-size:13px">You are not signed in as an admin. Use the <strong>Demo account</strong> menu at the top to switch to the Admin account.</p></div></div>`;
+    return;
+  }
   const tabs = [
     "overview",
     "reports",
@@ -1095,7 +1101,41 @@ function appealModal(id) {
     "modal-fields"
   ).innerHTML = `<div class="field"><label for="appeal-reason">Why should this be reviewed again? *</label><textarea id="appeal-reason" required maxlength="500" placeholder="Explain what the warning got wrong."></textarea></div>`;
 }
+function saveState() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({ listings, reportRows, sellerProfiles, conversations, reviewed: [...reviewedSellers], account, verificationStatus }));
+  } catch (e) {}
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (Array.isArray(d.listings)) { listings.length = 0; listings.push(...d.listings); }
+    if (Array.isArray(d.reportRows)) { reportRows.length = 0; reportRows.push(...d.reportRows); }
+    if (d.sellerProfiles) Object.assign(sellerProfiles, d.sellerProfiles);
+    if (d.conversations) { Object.keys(conversations).forEach((k) => delete conversations[k]); Object.assign(conversations, d.conversations); }
+    (d.reviewed || []).forEach((n) => reviewedSellers.add(n));
+    if (["guest", "user", "admin"].includes(d.account)) account = d.account;
+    if (d.verificationStatus) verificationStatus = d.verificationStatus;
+  } catch (e) {}
+}
+function renderHeader() {
+  const el = document.getElementById("header-actions");
+  if (!el) return;
+  const labels = { user: "Verified user (Adrian F.)", guest: "Unverified guest", admin: "Admin (staff)" };
+  el.innerHTML = `<label class="account-switch">Demo account <select id="account-switch" aria-label="Switch demo account">${["user", "guest", "admin"]
+    .map((k) => `<option value="${k}" ${account === k ? "selected" : ""}>${labels[k]}</option>`)
+    .join("")}</select></label>${
+    account === "guest" ? '<a class="verify-link" href="#verify">Register / Verify</a>' : ""
+  }${
+    account === "user" ? '<a class="avatar-link" href="#profile" aria-label="Open profile"><span class="avatar">AF</span><span class="avatar-name">Adrian F.</span></a>' : ""
+  }${
+    account === "admin" ? '<a class="admin-link" href="#admin">Admin dashboard ↗</a>' : ""
+  }<button class="reset-demo" type="button" data-action="reset-demo">Reset demo</button>`;
+}
 function routeFromHash() {
+  renderHeader();
   const raw = location.hash.replace(/^#/, "") || "home";
   const [path, query] = raw.split("?");
   const segments = path.split("/");
@@ -1323,8 +1363,15 @@ document.addEventListener("click", (event) => {
   if (action === "report" && requireVerified()) reportModal(button.dataset.id);
   if (action === "close-modal") closeModal();
   if (action === "appeal") appealModal(button.dataset.id);
+  if (action === "reset-demo") {
+    try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+    location.hash = "#home";
+    location.reload();
+  }
   if (action === "approve-demo") {
     verificationStatus = "verified";
+    account = "user";
+    renderHeader();
     renderVerify();
     toast("Verified (demo). You can now post, review, and report.");
   }
@@ -1491,6 +1538,15 @@ document.addEventListener("input", (event) => {
   }
 });
 document.addEventListener("change", (event) => {
+  if (event.target.id === "account-switch") {
+    account = event.target.value;
+    verificationStatus = account === "guest" ? "none" : "verified";
+    const target = account === "admin" ? "#admin" : account === "guest" ? "#verify" : "#home";
+    if (location.hash === target) routeFromHash();
+    else location.hash = target;
+    toast(account === "admin" ? "Switched to the Admin account." : account === "guest" ? "Switched to an unverified guest." : "Switched to the verified user.");
+    return;
+  }
   if (event.target.matches("[data-filter]")) {
     browseFilters[event.target.dataset.filter] = event.target.value;
     visibleCount = 8;
@@ -1561,5 +1617,9 @@ document.querySelector(".menu-toggle").addEventListener("click", (event) => {
   const open = nav.classList.toggle("open");
   event.currentTarget.setAttribute("aria-expanded", String(open));
 });
+loadState();
+["click", "submit", "change", "input"].forEach((t) =>
+  document.addEventListener(t, () => setTimeout(saveState, 0))
+);
 window.addEventListener("hashchange", routeFromHash);
 routeFromHash();
