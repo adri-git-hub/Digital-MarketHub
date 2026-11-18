@@ -1839,3 +1839,54 @@ textarea:focus-visible {
   outline: 2px solid var(--orange);
   outline-offset: 2px;
 }
+
+/* ---- My listings, sold badge, how it works ---- */
+.sold-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: white;
+  background: var(--navy);
+}
+.my-listing {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+.my-listing .product-emoji {
+  font-size: 32px;
+}
+.my-listing > div:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.my-listing strong {
+  display: block;
+  color: var(--navy);
+  font-size: 13px;
+}
+.my-listing small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.steps-grid .panel strong {
+  color: var(--navy);
+  font-size: 14px;
+}
+@media (max-width: 700px) {
+  .steps-grid {
+    grid-template-columns: 1fr;
+  }
+  .my-listing {
+    flex-wrap: wrap;
+  }
+}
