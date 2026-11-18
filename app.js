@@ -439,6 +439,9 @@ let adminTab = "overview";
 let currentSellerName = "Adrian F.";
 let verificationStatus = "verified";
 let account = "user"; // "guest" (unverified) | "user" (verified) | "admin"
+let messagesReturn = null; // listing the user contacted a seller from
+let lastHash = "";
+let prevHash = "";
 const STORE_KEY = "markethub-demo-v1";
 const reviewedSellers = new Set();
 let browseFilters = {
@@ -536,8 +539,22 @@ function sectionHeading(
 ) {
   return `<div class="section-heading"><div><h2>${title}</h2><p>${description}</p></div><a class="text-link" href="${href}">${linkText} →</a></div>`;
 }
+function backTarget() {
+  if (currentRoute === "messages" && messagesReturn) {
+    const l = getListing(messagesReturn);
+    return { href: `#listing/${l.id}`, label: `Back to “${l.name}”` };
+  }
+  const to = prevHash && prevHash !== location.hash ? prevHash : "#home";
+  const text = to.startsWith("#listing/") ? "Back to listing" : to.startsWith("#browse") ? "Back to browse" : to.startsWith("#seller") || to === "#profile" ? "Back to seller profile" : to === "#home" ? "Back to home" : "Back";
+  return { href: to, label: text };
+}
+function backLinkHtml() {
+  const b = backTarget();
+  return `<a class="back-link" href="${esc(b.href)}">← ${esc(b.label)}</a>`;
+}
 function pageTop(title, description, label = "MARKETPLACE") {
-  return `<div class="page-top"><div class="container"><span class="eyebrow">${label}</span><h1>${title}</h1><p>${description}</p></div></div>`;
+  const back = currentRoute === "home" ? "" : backLinkHtml();
+  return `<div class="page-top"><div class="container">${back}<span class="eyebrow">${label}</span><h1>${title}</h1><p>${description}</p></div></div>`;
 }
 function renderHome() {
   const featured = listings.filter((item) => item.featured && item.status !== "Removed").slice(0, 4);
@@ -695,6 +712,7 @@ function renderDetail(id) {
     "Review the item information and seller details before getting in touch.",
     "BROWSE · LISTING"
   )}
+    <nav class="container breadcrumb" aria-label="Breadcrumb"><a href="#home">Home</a> › <a href="#browse">Browse</a> › <a href="#browse?category=${encodeURIComponent(item.category)}">${esc(item.category)}</a> › <span aria-current="page">${esc(item.name)}</span></nav>
     <div class="container detail-layout">
       <div><div class="detail-main-image ${slugCategory(
         item.category
@@ -1136,6 +1154,10 @@ function renderHeader() {
 }
 function routeFromHash() {
   renderHeader();
+  if (location.hash !== lastHash) {
+    prevHash = lastHash;
+    lastHash = location.hash;
+  }
   const raw = location.hash.replace(/^#/, "") || "home";
   const [path, query] = raw.split("?");
   const segments = path.split("/");
@@ -1174,6 +1196,7 @@ function routeFromHash() {
   else if (currentRoute === "verify") renderVerify();
   else if (currentRoute === "profile") renderProfile();
   else renderHome();
+  window.scrollTo(0, 0);
 }
 function openModal(title, body, onSubmit, submitText = "Submit") {
   modalRoot.innerHTML = `<div class="modal-backdrop" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><h2 id="modal-title">${title}</h2><p>${body}</p><form id="modal-form"><div id="modal-fields"></div><div class="modal-actions"><button class="button-secondary" type="button" data-action="close-modal">Cancel</button><button class="button-primary" type="submit">${submitText}</button></div></form></section></div>`;
@@ -1261,6 +1284,7 @@ function featureModal() {
     )}</select></div><p class="form-note">Payment would be handled separately for MarketHub's featured-listing service. Buyer/seller transactions are not processed by the platform.</p>`;
 }
 function contactSeller(seller) {
+  messagesReturn = currentListingId;
   currentConversation = seller in conversations ? seller : "Mark D.";
   if (!(seller in conversations)) {
     conversations[seller] = [
@@ -1616,6 +1640,9 @@ document.querySelector(".menu-toggle").addEventListener("click", (event) => {
   const nav = document.querySelector(".main-nav");
   const open = nav.classList.toggle("open");
   event.currentTarget.setAttribute("aria-expanded", String(open));
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeModal();
 });
 loadState();
 ["click", "submit", "change", "input"].forEach((t) =>
